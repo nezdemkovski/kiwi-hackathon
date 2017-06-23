@@ -13,10 +13,9 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
-  },
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
+  }
 });
-
 
 // just return the result value for synchronous processing
 api.get('/hello', function() {
@@ -42,7 +41,7 @@ api.get('/places/{tag}', function(request) {
     error => {
       console.log('--------------------->', error);
       return error;
-    },
+    }
   );
 });
 

@@ -5,7 +5,7 @@
     "region": "eu-central-1"
   },
   "api": {
-    "id": "naiqnxro24",
-    "module": "main"
+    "id": "yojri0bch0",
+    "module": "dist/main"
   }
 }
