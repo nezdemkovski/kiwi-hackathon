@@ -1,0 +1,7 @@
+{
+  "lambda": {
+    "role": "kiwi-hackathon-executor",
+    "name": "kiwi-hackathon",
+    "region": "eu-central-1"
+  }
+}

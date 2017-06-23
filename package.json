@@ -4,8 +4,11 @@
   "description": "Kiwi.com Hackathon",
   "main": "index.js",
   "engines": {
-    "node": "^8.1.2"
+    "node": "6.10.0"
   },
+  "files": [
+    "main.js"
+  ],
   "dependencies": {},
   "devDependencies": {
     "babel-cli": "^6.24.1",
@@ -19,6 +22,6 @@
     "start": "nodemon index.js --exec babel-node --presets es2015,stage-2",
     "build": "babel index.js -d dist --presets es2015,stage-2",
     "prettier": "prettier --single-quote --trailing-comma all --write '**/*.js'",
-    "deploy": "node_modules/.bin/claudia create --region eu-central-1 --handler lambda.handler --profile=Kiwi"
+    "deploy": "node_modules/.bin/claudia create --region eu-central-1 --handler main.handler --profile=Kiwi"
   }
 }
