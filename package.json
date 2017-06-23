@@ -1,0 +1,24 @@
+{
+  "name": "kiwi-hackathon",
+  "version": "1.0.0",
+  "description": "Kiwi.com Hackathon",
+  "main": "index.js",
+  "engines": {
+    "node": "^8.1.2"
+  },
+  "dependencies": {
+
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-es2015": "^6.24.1",
+    "babel-preset-stage-2": "^6.24.1",
+    "nodemon": "^1.11.0",
+    "prettier": "^1.4.4"
+  },
+  "scripts": {
+    "start": "nodemon index.js --exec babel-node --presets es2015,stage-2",
+    "build": "babel index.js -d dist --presets es2015,stage-2",
+    "prettier": "prettier --single-quote --trailing-comma all --write '**/*.js'"
+  }
+}
