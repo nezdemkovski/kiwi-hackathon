@@ -2,9 +2,12 @@
 var ApiBuilder = require('claudia-api-builder'),
   api = new ApiBuilder(),
   fs = require('fs'),
-  superb = require('superb'),
-  denodeify = require('denodeify');
+  denodeify = require('denodeify'),
+  axios = require('axios');
 module.exports = api;
+
+const BASE_URL = 'https://api.sygictravelapi.com/0.2/en';
+const PLACES = '/places/list';
 
 // just return the result value for synchronous processing
 api.get('/hello', function() {
@@ -23,8 +26,10 @@ api.get('/greet', function(request) {
 });
 
 // use {} for dynamic path parameters
-api.get('/people/{name}', function(request) {
-  return request.pathParams.name + ' is ' + superb();
+api.get('/places/{tag}', function(request) {
+  const tag = request.pathParams.tag;
+  console.log('Looking for tag', tag);
+  axios.get(BASE_URL + PLACES + '?tags=' + tag).then(resp => resp);
 });
 
 // Return a promise for async processing
