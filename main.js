@@ -1,10 +1,8 @@
-/*global require, module*/
-var ApiBuilder = require('claudia-api-builder'),
-  api = new ApiBuilder(),
-  fs = require('fs'),
-  denodeify = require('denodeify'),
-  Axios = require('axios');
-module.exports = api;
+import ApiBuilder from 'claudia-api-builder';
+import denodeify from 'denodeify';
+import Axios from 'axios';
+import fs from 'fs';
+const api = new ApiBuilder();
 
 const BASE_URL = 'https://api.sygictravelapi.com/0.2/en';
 const PLACES = '/places/list';
@@ -13,8 +11,8 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
-  }
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
+  },
 });
 
 // just return the result value for synchronous processing
@@ -29,25 +27,22 @@ api.get('/echo', function(request) {
 });
 
 // use {} for dynamic path parameters
-api.get('/places/{tag}', function(request) {
+api.get('/places/{tag}', request => {
   const tag = request.pathParams.tag;
-  console.log('Looking for tag', tag);
 
-  return sygicApi.get(PLACES + `?tags=${tag}`).then(
+  return sygicApi.get(`${PLACES}?tags=${tag}`).then(
     success => {
-      console.log('--------------------->', success);
       return success.data;
     },
     error => {
-      console.log('--------------------->', error);
       return error;
-    }
+    },
   );
 });
 
 // Return a promise for async processing
 api.get('/packagejson', function() {
-  var read = denodeify(fs.readFile);
+  const read = denodeify(fs.readFile);
   return read('./package.json').then(JSON.parse).then(function(val) {
     return val;
   });
@@ -57,3 +52,5 @@ api.get('/packagejson', function() {
 api.post('/echo', function(request) {
   return request;
 });
+
+module.exports = api;
