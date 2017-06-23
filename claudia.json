@@ -1,7 +1,11 @@
 {
   "lambda": {
-    "role": "kiwi-hackathon-executor",
-    "name": "kiwi-hackathon",
+    "role": "travelhackers-api-executor",
+    "name": "travelhackers-api",
     "region": "eu-central-1"
+  },
+  "api": {
+    "id": "naiqnxro24",
+    "module": "main"
   }
 }
