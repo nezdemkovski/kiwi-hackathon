@@ -3,11 +3,19 @@ var ApiBuilder = require('claudia-api-builder'),
   api = new ApiBuilder(),
   fs = require('fs'),
   denodeify = require('denodeify'),
-  axios = require('axios');
+  Axios = require('axios');
 module.exports = api;
 
 const BASE_URL = 'https://api.sygictravelapi.com/0.2/en';
 const PLACES = '/places/list';
+
+const sygicApi = Axios.create({
+  baseURL: BASE_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
 
 // just return the result value for synchronous processing
 api.get('/hello', function() {
@@ -29,7 +37,15 @@ api.get('/greet', function(request) {
 api.get('/places/{tag}', function(request) {
   const tag = request.pathParams.tag;
   console.log('Looking for tag', tag);
-  axios.get(BASE_URL + PLACES + '?tags=' + tag).then(resp => resp);
+
+  sygicApi.get(`?tags=${tag}`).then(
+    success => {
+      return success;
+    },
+    error => {
+      return error;
+    },
+  );
 });
 
 // Return a promise for async processing

@@ -24,7 +24,7 @@
     "prettier": "^1.4.4"
   },
   "scripts": {
-    "start": "nodemon index.js --exec babel-node --presets es2015,stage-2",
+    "start": "nodemon main.js --exec babel-node --presets es2015,stage-2",
     "build": "babel index.js -d dist --presets es2015,stage-2",
     "prettier": "prettier --single-quote --trailing-comma all --write '**/*.js'",
     "create": "claudia create --name travelhackers-api --region eu-central-1 --api-module main --profile=Kiwi",
