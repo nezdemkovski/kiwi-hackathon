@@ -68,3 +68,5 @@ config.codekit3
 
 codeship.aes
 .env
+
+dist

@@ -2,12 +2,12 @@
   "name": "kiwi-hackathon",
   "version": "1.0.0",
   "description": "Kiwi.com Hackathon",
-  "main": "index.js",
+  "main": "main.js",
   "engines": {
     "node": "6.10.0"
   },
   "files": [
-    "main.js"
+    "dist"
   ],
   "dependencies": {
     "claudia-api-builder": "^2.0.0",
@@ -25,9 +25,9 @@
   },
   "scripts": {
     "start": "nodemon main.js --exec babel-node --presets es2015,stage-2",
-    "build": "babel index.js -d dist --presets es2015,stage-2",
+    "build": "babel main.js -d dist --presets es2015,stage-2",
     "prettier": "prettier --single-quote --trailing-comma all --write '**/*.js'",
-    "create": "claudia create --name travelhackers-api --region eu-central-1 --api-module main --profile=Kiwi",
-    "deploy": "claudia update --name travelhackers-api --region eu-central-1 --api-module main --profile=Kiwi"
+    "create": "yarn build && claudia create --name travelhackers-api --region eu-central-1 --api-module dist/main --profile=Kiwi",
+    "deploy": "yarn build && claudia update --name travelhackers-api --region eu-central-1 --api-module dist/main --profile=Kiwi"
   }
 }

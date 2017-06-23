@@ -13,6 +13,7 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
   },
 });
 
@@ -28,21 +29,18 @@ api.get('/echo', function(request) {
   return request;
 });
 
-// use request.queryString for query arguments
-api.get('/greet', function(request) {
-  return request.queryString.name + ' is ' + superb();
-});
-
 // use {} for dynamic path parameters
 api.get('/places/{tag}', function(request) {
   const tag = request.pathParams.tag;
   console.log('Looking for tag', tag);
 
-  sygicApi.get(`?tags=${tag}`).then(
+  return sygicApi.get(PLACES + `?tags=${tag}`).then(
     success => {
-      return success;
+      console.log('--------------------->', success);
+      return success.data;
     },
     error => {
+      console.log('--------------------->', error);
       return error;
     },
   );
