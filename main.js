@@ -15,20 +15,16 @@ const sygicApi = Axios.create({
   },
 });
 
-// just return the result value for synchronous processing
-api.get('/hello', function() {
+api.get('/hello', () => {
   return 'hello world';
 });
 
-// pass some arguments using the query string or headers to this
-// method and see that they're all in the request object
-api.get('/echo', function(request) {
+api.get('/echo', request => {
   return request;
 });
 
-// use {} for dynamic path parameters
 api.get('/places/{tag}', request => {
-  const tag = request.pathParams.tag;
+  const { tag } = request.pathParams;
 
   return sygicApi.get(`${PLACES}?tags=${tag}`).then(
     success => {
@@ -40,16 +36,14 @@ api.get('/places/{tag}', request => {
   );
 });
 
-// Return a promise for async processing
-api.get('/packagejson', function() {
+api.get('/packagejson', () => {
   const read = denodeify(fs.readFile);
   return read('./package.json').then(JSON.parse).then(function(val) {
     return val;
   });
 });
 
-// use .post to handle a post; or .delete, .patch, .head, .put
-api.post('/echo', function(request) {
+api.post('/echo', request => {
   return request;
 });
 
