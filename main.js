@@ -9,7 +9,7 @@ import flatMap from 'lodash.flatmap';
 const api = new ApiBuilder();
 
 const opts = {
-  uri: 'https://2z448ylj8d.execute-api.eu-west-1.amazonaws.com/hackathon',
+  uri: 'https://2z448ylj8d.execute-api.eu-west-1.amazonaws.com/hackathon'
 };
 const networkInterface = createNetworkInterface(opts);
 
@@ -18,17 +18,18 @@ const PLACES = '/places/list';
 const SOURCE = 'prague';
 const FLIGHTS_API = 'https://api.skypicker.com/flights';
 // https://api.skypicker.com/flights?flyFrom=CZ&to=porto&directFlights=true&sort=price&asc=1
+// errorMessage: "GraphQL error: Internal Server Error GraphQL error: Internal Server Error GraphQL error: Internal Server Error GraphQL error: Internal Server Error"
 
 const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
-  },
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
+  }
 });
 
 const flightsClient = new ApolloClient({
-  networkInterface,
+  networkInterface
 });
 
 const createVariables = (lat, lng, location) => {
@@ -39,13 +40,19 @@ const createVariables = (lat, lng, location) => {
           // Prague
           lat: 50.08,
           lng: 14.44,
-          radius: 100,
-        },
+          radius: 100
+        }
       },
-      to: [{ location }],
+      to: {
+        radius: {
+          lat,
+          lng,
+          radius: 100
+        }
+      },
       dateFrom: '2017-12-24',
-      dateTo: '2017-12-30',
-    },
+      dateTo: '2017-12-30'
+    }
   };
 };
 
@@ -60,8 +67,10 @@ api.get('/echo', request => {
 api.get('/places', request => {
   const { tags } = request.proxyRequest.queryStringParameters;
 
+  console.log(tags);
+
   return Promise.all(
-    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`)),
+    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}&limit=15`))
   ).then(values => {
     const pois = flatMap(values, it => {
       const { places } = it.data.data;
@@ -73,53 +82,54 @@ api.get('/places', request => {
             rating: it.rating,
             location: it.location,
             name: it.name,
-            city: it.name_suffix.split(',')[0],
-            country: it.name_suffix.split(',')[1],
+            city: it.name_suffix && it.name_suffix.split(', ')[0],
+            country: it.name_suffix && it.name_suffix.split(', ')[1],
             marker: it.marker,
             categories: it.categories,
-            perex: it.perex,
+            perex: it.perex
           };
         }
       });
     });
 
-    return Promise.all(
-      pois.map(it => {
-        const { lat, lng } = it.location;
-        const location = it.city;
+    const groupedByCity = pois.reduce((acc, curr) => {
+      if (!acc[curr.city]) {
+        acc[curr.city] = {
+          places: [curr],
+          lat: curr.location.lat,
+          lng: curr.location.lng
+        };
+        return acc;
+      }
+      acc[curr.city].places.push(curr);
+      return acc;
+    }, {});
 
-        console.log(lat, lng, location);
-        return flightsClient.query({
+    return Object.keys(groupedByCity).map(it => {
+      return flightsClient
+        .query({
           query,
-          variables: createVariables(lat, lng, location),
+          variables: createVariables(
+            groupedByCity[it].lat,
+            groupedByCity[it].lng
+          )
+        })
+        .then(result => {
+          const price = result.data.allFlights.edges.map(it => {
+            return {
+              price: it.node.price + ' ' + it.node.currency
+            };
+          });
+          return {
+            ...groupedByCity,
+            price
+          };
         });
-      }),
-    ).then(
-      success => {
-        console.log('------------------->', success);
-        return success;
-      },
-      error => {
-        return error;
-      },
-    );
+    });
   });
 });
 
-// api.get('/flights', () => {
-//   const flightsClient = new ApolloClient({
-//     networkInterface
-//   });
-//   return flightsClient.query({ query, variables }).then(
-//     success => {
-//       console.log('------------------->', success);
-//       return success;
-//     },
-//     error => {
-//       return error;
-//     }
-//   );
-// });
+api.get('/flights', () => {});
 
 api.get('/packagejson', () => {
   const read = denodeify(fs.readFile);
