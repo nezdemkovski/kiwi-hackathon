@@ -11,8 +11,8 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
-  },
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
+  }
 });
 
 api.get('/hello', () => {
@@ -23,17 +23,19 @@ api.get('/echo', request => {
   return request;
 });
 
-api.get('/places/{tag}', request => {
-  const { tag } = request.pathParams;
+api.get('/places', request => {
+  const { tags } = request.proxyRequest.queryStringParameters;
 
-  return sygicApi.get(`${PLACES}?tags=${tag}`).then(
-    success => {
-      return success.data;
-    },
-    error => {
-      return error;
-    },
-  );
+  return Promise.all(
+    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`))
+  ).then(values => {
+    console.log(values);
+    return values.map(it => {
+      const { places } = it.data.data;
+      return places;
+      // return places.map(it => it.name_suffix.split(',')[0]);
+    });
+  });
 });
 
 api.get('/packagejson', () => {
