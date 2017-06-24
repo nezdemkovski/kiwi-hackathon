@@ -16,6 +16,7 @@ const networkInterface = createNetworkInterface(opts);
 
 const BASE_URL = 'https://api.sygictravelapi.com/0.2/en';
 const PLACES = '/places/list';
+const PLACES_SHORT = '/places';
 const SOURCE = 'prague';
 const FLIGHTS_API = 'https://api.skypicker.com/flights';
 // https://api.skypicker.com/flights?flyFrom=CZ&to=porto&directFlights=true&sort=price&asc=1
@@ -68,6 +69,8 @@ api.get('/echo', request => {
 api.get('/places', (request, ctx) => {
   const { tags } = request.proxyRequest.queryStringParameters;
 
+  const totalTags = tags.split('|').length;
+
   return sygicApi.get(`${PLACES}?tags=${tags}&limit=500`).then(value => {
     const pois = value.data.data.places.map(it => {
       {
@@ -85,29 +88,42 @@ api.get('/places', (request, ctx) => {
       }
     });
 
-    const groupedByCity = pois.reduce((acc, curr) => {
-      if (!acc[curr.city]) {
-        acc[curr.city] = {
-          places: [curr],
-          lat: curr.location.lat,
-          lng: curr.location.lng
-        };
+    const poiRequestQuery = pois.map(it => it.id).join('%7C');
+    return sygicApi.get(`${PLACES_SHORT}?ids=${poiRequestQuery}`).then(resp => {
+      const filteredTags = resp.data.data.places
+        .filter(it => {
+          return (
+            it.tags.filter(it => {
+              const index = tags.toLowerCase().indexOf(it.key.toLowerCase());
+              return index > -1;
+            }).length >= totalTags
+          );
+        })
+        .map(it => it.id);
+      const filteredPois = pois.filter(it => filteredTags.indexOf(it.id) > -1);
+      const groupedByCity = filteredPois.reduce((acc, curr) => {
+        if (!acc[curr.city]) {
+          acc[curr.city] = {
+            places: [curr],
+            lat: curr.location.lat,
+            lng: curr.location.lng
+          };
+          return acc;
+        }
+        acc[curr.city].places.push(curr);
         return acc;
-      }
-      acc[curr.city].places.push(curr);
-      return acc;
-    }, {});
+      }, {});
 
-    return {
-      cities: groupedByCity,
-      total: Object.keys(groupedByCity).length
-    };
+      return {
+        cities: groupedByCity,
+        total: Object.keys(groupedByCity).length
+      };
+    });
   });
 });
 
 api.get('/flights', request => {
   const { lat, lng } = request.proxyRequest.queryStringParameters;
-  console.log(lat, lng);
   return flightsClient
     .query({
       query,
@@ -115,7 +131,6 @@ api.get('/flights', request => {
     })
     .then(result => {
       return result.data.allFlights.edges.map(it => {
-        console.log(it);
         return {
           price: it.node.price.amount + ' ' + it.node.price.currency
         };
@@ -123,11 +138,9 @@ api.get('/flights', request => {
     });
 });
 
-api.get('/packagejson', () => {
-  const read = denodeify(fs.readFile);
-  return read('./package.json').then(JSON.parse).then(val => {
-    return val;
-  });
+api.get('/cities', request => {
+  const { id } = request.proxyRequest.queryStringParameters;
+  return sygicApi.get(`${PLACES_SHORT}/${id}`).then(resp => resp.data);
 });
 
 api.post('/echo', request => {
