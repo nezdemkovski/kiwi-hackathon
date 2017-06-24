@@ -52,8 +52,8 @@ const createVariables = (lat, lng, location) => {
           radius: 100
         }
       },
-      dateFrom: '2017-12-24',
-      dateTo: '2017-12-30'
+      dateFrom: '2017-07-01',
+      dateTo: '2017-07-08'
     }
   };
 };
@@ -71,7 +71,7 @@ api.get('/places', (request, ctx) => {
 
   const totalTags = tags.split('|').length;
 
-  return sygicApi.get(`${PLACES}?tags=${tags}&limit=500`).then(value => {
+  return sygicApi.get(`${PLACES}?tags=${tags}&limit=200`).then(value => {
     const pois = value.data.data.places.map(it => {
       {
         return {
@@ -88,37 +88,40 @@ api.get('/places', (request, ctx) => {
       }
     });
 
-    const poiRequestQuery = pois.map(it => it.id).join('%7C');
-    return sygicApi.get(`${PLACES_SHORT}?ids=${poiRequestQuery}`).then(resp => {
-      const filteredTags = resp.data.data.places
-        .filter(it => {
-          return (
-            it.tags.filter(it => {
-              const index = tags.toLowerCase().indexOf(it.key.toLowerCase());
-              return index > -1;
-            }).length >= totalTags
-          );
-        })
-        .map(it => it.id);
-      const filteredPois = pois.filter(it => filteredTags.indexOf(it.id) > -1);
-      const groupedByCity = filteredPois.reduce((acc, curr) => {
-        if (!acc[curr.city]) {
-          acc[curr.city] = {
-            places: [curr],
-            lat: curr.location.lat,
-            lng: curr.location.lng
-          };
-          return acc;
-        }
-        acc[curr.city].places.push(curr);
-        return acc;
-      }, {});
+    console.log(pois);
 
-      return {
-        cities: groupedByCity,
-        total: Object.keys(groupedByCity).length
-      };
-    });
+    const groupedByCity = pois.reduce((acc, curr) => {
+      if (!acc[curr.city]) {
+        acc[curr.city] = {
+          places: [curr],
+          lat: curr.location.lat,
+          lng: curr.location.lng
+        };
+        return acc;
+      }
+      acc[curr.city].places.push(curr);
+      return acc;
+    }, {});
+
+    return {
+      cities: groupedByCity,
+      total: Object.keys(groupedByCity).length
+    };
+
+    // const poiRequestQuery = pois.map(it => it.id).join('%7C');
+    // return sygicApi.get(`${PLACES_SHORT}?ids=${poiRequestQuery}`).then(resp => {
+    // const filteredTags = resp.data.data.places
+    //   .filter(it => {
+    //     return (
+    //       it.tags.filter(it => {
+    //         const index = tags.toLowerCase().indexOf(it.key.toLowerCase());
+    //         return index > -1;
+    //       }).length >= totalTags
+    //     );
+    //   })
+    //   .map(it => it.id);
+    // const filteredPois = pois.filter(it => filteredTags.indexOf(it.id) > -1);
+    // });
   });
 });
 
