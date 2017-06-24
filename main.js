@@ -6,6 +6,9 @@ const api = new ApiBuilder();
 
 const BASE_URL = 'https://api.sygictravelapi.com/0.2/en';
 const PLACES = '/places/list';
+const SOURCE = 'prague';
+const FLIGHTS_API = 'https://api.skypicker.com/flights';
+// https://api.skypicker.com/flights?flyFrom=CZ&to=porto&directFlights=true&sort=price&asc=1
 
 const sygicApi = Axios.create({
   baseURL: BASE_URL,
@@ -48,5 +51,8 @@ api.get('/packagejson', () => {
 api.post('/echo', request => {
   return request;
 });
+
+const flightsUrl = (from, to) =>
+  `${FLIGHTS_API}?flyFrom=${from}&to=${to}&directFlights=true&sort=price&asc=1`;
 
 module.exports = api;
