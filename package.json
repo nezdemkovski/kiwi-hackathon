@@ -33,6 +33,6 @@
     "build": "babel main.js -d dist --presets es2015,stage-2",
     "prettier": "prettier --single-quote --trailing-comma all --write '*.js'",
     "create": "yarn prettier && yarn build && claudia create --name travelhackers-api --region eu-central-1 --api-module dist/main --profile=Kiwi",
-    "deploy": "yarn prettier && yarn build && claudia update --name travelhackers-api --region eu-central-1 --api-module dist/main --profile=Kiwi"
+    "deploy": "yarn prettier && yarn build && claudia update --name travelhackers-api --region eu-central-1 --api-module dist/main --profile=Kiwi --timeout=10"
   }
 }

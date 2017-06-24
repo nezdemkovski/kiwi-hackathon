@@ -9,7 +9,7 @@ import flatMap from 'lodash.flatmap';
 const api = new ApiBuilder();
 
 const opts = {
-  uri: 'https://2z448ylj8d.execute-api.eu-west-1.amazonaws.com/hackathon'
+  uri: 'https://2z448ylj8d.execute-api.eu-west-1.amazonaws.com/hackathon',
 };
 const networkInterface = createNetworkInterface(opts);
 
@@ -23,9 +23,31 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
-  }
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
+  },
 });
+
+const flightsClient = new ApolloClient({
+  networkInterface,
+});
+
+const createVariables = (lat, lng, location) => {
+  return {
+    search: {
+      from: {
+        radius: {
+          // Prague
+          lat: 50.08,
+          lng: 14.44,
+          radius: 100,
+        },
+      },
+      to: [{ location }],
+      dateFrom: '2017-12-24',
+      dateTo: '2017-12-30',
+    },
+  };
+};
 
 api.get('/hello', () => {
   return 'hello world';
@@ -39,9 +61,9 @@ api.get('/places', request => {
   const { tags } = request.proxyRequest.queryStringParameters;
 
   return Promise.all(
-    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`))
+    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`)),
   ).then(values => {
-    return flatMap(values, it => {
+    const pois = flatMap(values, it => {
       const { places } = it.data.data;
 
       return places.map(it => {
@@ -55,28 +77,49 @@ api.get('/places', request => {
             country: it.name_suffix.split(',')[1],
             marker: it.marker,
             categories: it.categories,
-            perex: it.perex
+            perex: it.perex,
           };
         }
       });
     });
+
+    return Promise.all(
+      pois.map(it => {
+        const { lat, lng } = it.location;
+        const location = it.city;
+
+        console.log(lat, lng, location);
+        return flightsClient.query({
+          query,
+          variables: createVariables(lat, lng, location),
+        });
+      }),
+    ).then(
+      success => {
+        console.log('------------------->', success);
+        return success;
+      },
+      error => {
+        return error;
+      },
+    );
   });
 });
 
-api.get('/flights', () => {
-  const flightsClient = new ApolloClient({
-    networkInterface
-  });
-  return flightsClient.query({ query, variables }).then(
-    success => {
-      console.log('------------------->', success);
-      return success;
-    },
-    error => {
-      return error;
-    }
-  );
-});
+// api.get('/flights', () => {
+//   const flightsClient = new ApolloClient({
+//     networkInterface
+//   });
+//   return flightsClient.query({ query, variables }).then(
+//     success => {
+//       console.log('------------------->', success);
+//       return success;
+//     },
+//     error => {
+//       return error;
+//     }
+//   );
+// });
 
 api.get('/packagejson', () => {
   const read = denodeify(fs.readFile);
@@ -91,21 +134,6 @@ api.post('/echo', request => {
 
 const flightsUrl = (from, to) =>
   `${FLIGHTS_API}?flyFrom=${from}&to=${to}&directFlights=true&sort=price&asc=1`;
-const variables = {
-  search: {
-    from: {
-      radius: {
-        // Prague
-        lat: 50.08,
-        lng: 14.44,
-        radius: 100
-      }
-    },
-    to: [{ location: 'Brno' }, { location: 'London' }],
-    dateFrom: '2017-12-24',
-    dateTo: '2017-12-30'
-  }
-};
 
 const query = gql`
 fragment RouteStop on RouteStop {
