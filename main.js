@@ -1,6 +1,7 @@
 import ApiBuilder from 'claudia-api-builder';
 import denodeify from 'denodeify';
 import Axios from 'axios';
+import flatMap from 'lodash.flatmap';
 import fs from 'fs';
 const api = new ApiBuilder();
 
@@ -30,7 +31,7 @@ api.get('/places', request => {
     tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`))
   ).then(values => {
     console.log(values);
-    return values.map(it => {
+    return flatMap(values, it => {
       const { places } = it.data.data;
       return places;
       // return places.map(it => it.name_suffix.split(',')[0]);
