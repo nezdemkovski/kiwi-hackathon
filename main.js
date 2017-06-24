@@ -6,10 +6,11 @@ import Axios from 'axios';
 import ApolloClient, { createNetworkInterface } from 'apollo-client';
 import gql from 'graphql-tag';
 import flatMap from 'lodash.flatmap';
+import _ from 'lodash';
 const api = new ApiBuilder();
 
 const opts = {
-  uri: 'https://2z448ylj8d.execute-api.eu-west-1.amazonaws.com/hackathon'
+  uri: 'https://2z448ylj8d.execute-api.eu-west-1.amazonaws.com/hackathon',
 };
 const networkInterface = createNetworkInterface(opts);
 
@@ -24,12 +25,12 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
-  }
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
+  },
 });
 
 const flightsClient = new ApolloClient({
-  networkInterface
+  networkInterface,
 });
 
 const createVariables = (lat, lng, location) => {
@@ -40,19 +41,19 @@ const createVariables = (lat, lng, location) => {
           // Prague
           lat: 50.08,
           lng: 14.44,
-          radius: 100
-        }
+          radius: 100,
+        },
       },
       to: {
         radius: {
           lat,
           lng,
-          radius: 100
-        }
+          radius: 100,
+        },
       },
       dateFrom: '2017-12-24',
-      dateTo: '2017-12-30'
-    }
+      dateTo: '2017-12-30',
+    },
   };
 };
 
@@ -64,13 +65,11 @@ api.get('/echo', request => {
   return request;
 });
 
-api.get('/places', request => {
+api.get('/places', (request, ctx) => {
   const { tags } = request.proxyRequest.queryStringParameters;
 
-  console.log(tags);
-
   return Promise.all(
-    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}&limit=15`))
+    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}&limit=100`)),
   ).then(values => {
     const pois = flatMap(values, it => {
       const { places } = it.data.data;
@@ -86,7 +85,7 @@ api.get('/places', request => {
             country: it.name_suffix && it.name_suffix.split(', ')[1],
             marker: it.marker,
             categories: it.categories,
-            perex: it.perex
+            perex: it.perex,
           };
         }
       });
@@ -97,7 +96,7 @@ api.get('/places', request => {
         acc[curr.city] = {
           places: [curr],
           lat: curr.location.lat,
-          lng: curr.location.lng
+          lng: curr.location.lng,
         };
         return acc;
       }
@@ -105,31 +104,30 @@ api.get('/places', request => {
       return acc;
     }, {});
 
-    return Object.keys(groupedByCity).map(it => {
-      return flightsClient
-        .query({
-          query,
-          variables: createVariables(
-            groupedByCity[it].lat,
-            groupedByCity[it].lng
-          )
-        })
-        .then(result => {
-          const price = result.data.allFlights.edges.map(it => {
-            return {
-              price: it.node.price + ' ' + it.node.currency
-            };
-          });
-          return {
-            ...groupedByCity,
-            price
-          };
-        });
-    });
+    return {
+      cities: groupedByCity,
+      total: Object.keys(groupedByCity).length,
+    };
   });
 });
 
-api.get('/flights', () => {});
+api.get('/flights', request => {
+  const { lat, lng } = request.proxyRequest.queryStringParameters;
+  console.log(lat, lng);
+  return flightsClient
+    .query({
+      query,
+      variables: createVariables(parseFloat(lat), parseFloat(lng)),
+    })
+    .then(result => {
+      return result.data.allFlights.edges.map(it => {
+        console.log(it);
+        return {
+          price: it.node.price.amount + ' ' + it.node.price.currency,
+        };
+      });
+    });
+});
 
 api.get('/packagejson', () => {
   const read = denodeify(fs.readFile);

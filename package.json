@@ -16,6 +16,7 @@
     "denodeify": "^1.2.1",
     "graphql-tag": "^2.4.2",
     "isomorphic-fetch": "^2.2.1",
+    "lodash": "^4.17.4",
     "lodash.flatmap": "^4.5.0",
     "lodash.mapkeys": "^4.5.0",
     "node-fetch": "^1.7.1",
