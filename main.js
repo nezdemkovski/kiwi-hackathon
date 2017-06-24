@@ -12,8 +12,8 @@ const sygicApi = Axios.create({
   baseURL: BASE_URL,
   headers: {
     'Content-Type': 'application/json',
-    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8'
-  }
+    'x-api-key': 'nSCQiwW9R88zlr0P7J2VocUXBnKejmO26m9eIUl8',
+  },
 });
 
 api.get('/hello', () => {
@@ -28,20 +28,34 @@ api.get('/places', request => {
   const { tags } = request.proxyRequest.queryStringParameters;
 
   return Promise.all(
-    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`))
+    tags.split(',').map(it => sygicApi.get(`${PLACES}?tags=${it}`)),
   ).then(values => {
     console.log(values);
     return flatMap(values, it => {
       const { places } = it.data.data;
-      return places;
-      // return places.map(it => it.name_suffix.split(',')[0]);
+
+      return places.map(it => {
+        {
+          return {
+            id: it.id,
+            rating: it.rating,
+            location: it.location,
+            name: it.name,
+            city: it.name_suffix.split(',')[0],
+            country: it.name_suffix.split(',')[1],
+            marker: it.marker,
+            categories: it.categories,
+            perex: it.perex,
+          };
+        }
+      });
     });
   });
 });
 
 api.get('/packagejson', () => {
   const read = denodeify(fs.readFile);
-  return read('./package.json').then(JSON.parse).then(function(val) {
+  return read('./package.json').then(JSON.parse).then(val => {
     return val;
   });
 });
